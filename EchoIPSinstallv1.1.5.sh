@@ -484,13 +484,14 @@ EOL"
             check_error "Modifying Snort configuration"
 
             log "Modifying whitelist and blacklist in Snort configuration..."
-            sudo sed -i "s|^#preprocessor reputation: .*|preprocessor reputation: \\|" "$SNORT_CONF"
-            sudo sed -i "s|^#   memcap 500.*|memcap 500, \\|" "$SNORT_CONF"
-            sudo sed -i "s|^#   priority whitelist.*|priority whitelist, \\|" "$SNORT_CONF"
-            sudo sed -i "s|^#   nested_ip inner.*|nested_ip inner, \\|" "$SNORT_CONF"
-            sudo sed -i "s|^#   whitelist .*|whitelist \$WHITE_LIST_PATH/whitelist.rules, \\|" "$SNORT_CONF"
-            sudo sed -i "s|^#   blacklist .*|blacklist \$BLACK_LIST_PATH/blacklist.rules|" "$SNORT_CONF"
-            check_error "Modifying whitelist and blacklist in Snort configuration"
+            sudo bash -c "cat <<EOL >> $SNORT_CONF
+preprocessor reputation: \\
+    memcap 500, \\
+    priority whitelist, \\
+    nested_ip inner, \\
+    whitelist \$WHITE_LIST_PATH/whitelist.rules, \\
+    blacklist \$BLACK_LIST_PATH/blacklist.rules
+EOL"
 
             log "Updating Snort rules path..."
             sudo touch /etc/snort/rules/local.rules
@@ -589,7 +590,7 @@ EOL"
 
             log "Modifying snort.conf..."
             sudo touch /etc/snort/rules/snort.rules
-            echo 'include rules/snort.rules' | sudo tee -a ${SNORT_CONF}
+            echo 'include /etc/snort/rules/snort.rules' | sudo tee -a ${SNORT_CONF}
             check_error "Modifying snort.conf"
 
             log "Testing Snort configuration..."
