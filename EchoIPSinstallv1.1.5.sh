@@ -207,13 +207,19 @@ create_new_user() {
     sudo usermod -aG sudo "$NEW_USER"
     sudo cp -r /home/${USER}/. /home/$NEW_USER/
     sudo chown $NEW_USER:$NEW_USER /home/$NEW_USER/
-    su $NEW_USER
     
     if [ $? -eq 0 ]; then
         echo "User $NEW_USER has been created."
     else
         echo "Failed to create the user $NEW_USER."
         exit 1
+    fi
+    su $NEW_USER
+    read -p "Do you want to delete the default user? (y/n): " DELETE_DEFAULT
+    if [[ "$DELETE_DEFAULT" =~ ^[Yy]$ ]]; then
+        delete_default_user
+    else
+        echo "Default user was not deleted."
     fi
 }
 
@@ -626,12 +632,7 @@ EOL"
         log "Total time: $HOURS hours, $MINUTES minutes, and $SECONDS seconds."
         echo ""
         create_new_user
-        read -p "Do you want to delete the default user? (y/n): " DELETE_DEFAULT
-        if [[ "$DELETE_DEFAULT" =~ ^[Yy]$ ]]; then
-            delete_default_user
-        else
-            echo "Default user was not deleted."
-        fi
+        
         #sudo systemctl reboot -i
     esac
 done
