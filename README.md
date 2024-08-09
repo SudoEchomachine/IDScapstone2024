@@ -22,26 +22,25 @@ This project uses open-source software
 
 Installation:
 
-  Download one of the three options;
-  
-    1. Bash install script & NetworkConnect.sh
-        Requires installed OS.
-    
-        Source install for advanced users. For full customization including hardware.
-        
-    2. Image file basic 
-    
-        Image file install for general users. Easiest to personalize.
-        
-    3. Image file full
-    
-        Image file with completed setup. Little to no customization.
-        Run NewUserSetup.sh at first login.
-        
+Download bash install script & NetworkConnect.sh
 
-Image files must be flashed to an SD card.
+Requires installed OS.
 
-I used Balena Etcher.
+Fill in user prompts as desired
+
+IP address X.X.X.0 is reserved for Network purposes
+
+Sign up at www.snort.org to get your oink code.
+
+Select yes, then no when prompted to save IPtable rules
+
+Delete entry when prompted for Address range, then hit ok.
+
+Reboot when done. Screen and keyboard are only necessary for intial setup.
+
+Alert site (WIP) can be accessed at the ip address found by using command 
+
+        
 
 Default login credentials
 user: shelter
