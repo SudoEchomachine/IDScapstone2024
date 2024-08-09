@@ -184,6 +184,8 @@ create_new_user() {
     
     if [ $? -eq 0 ]; then
         echo "User $NEW_USER has been created."
+        sudo cp /home/$(whoami) /home/$NEW_USER
+        su $NEW_USER
     else
         echo "Failed to create the user $NEW_USER."
         exit 1
