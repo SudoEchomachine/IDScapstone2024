@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# Variables
+CON_NAME="<name>"
+IP_ADDRESS="192.168.<XXX>.<XXX>"
+RULES_VERSION="<version>"
+OINK_CODE="<oinkcode>"
+PULLEDPORK_VERSION="<version#>"
+CRON_MINS="<mins>"
+CRON_HOUR="<hour>"
+CRON_DAY="<day>"
+
+# Step 2: Update and upgrade
+sudo apt update && sudo apt upgrade -y
+
+# Step 3: Install NetworkManager
+sudo apt-get install network-manager -y
+
+# Step 5: Create pass-through connection
+sudo nmcli c add con-name "$CON_NAME" type ethernet ifname eth0 ipv4.method share ipv6.method ignore
+sudo nmcli c mod "$CON_NAME" ipv4.addresses "$IP_ADDRESS/24"
+
+# Step 6: Modify /etc/sysctl.conf
+sudo bash -c 'cat <<EOL >> /etc/sysctl.conf
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.tcp_syncookies = 1
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.eth0.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.eth0.send_redirects = 0
+net.ipv4.all.log_martians = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+vm.min_free_kbytes = 8192
+EOL'
+sudo sysctl -p
+
+# Step 7: Install DNSmasq
+sudo apt-get install dnsmasq -y
+
+# Step 8: Modify /etc/dnsmasq.conf
+sudo bash -c 'cat <<EOL >> /etc/dnsmasq.conf
+domain-needed
+bogus-priv
+server=8.8.8.8
+interface=eth0
+listen-address=$IP_ADDRESS
+bind-interfaces
+dhcp-range=$IP_ADDRESS,$IP_ADDRESS,12h
+dhcp-authoritative
+cache-size=300
+dns-forward-max=150
+EOL'
+sudo systemctl enable dnsmasq.service
+
+# Step 9: Download firewall scripts to /etc
+# wget <URL_to_firewall_script> -O /etc/firewall.sh
+
+# Step 10: Execute firewall setup scripts
+sudo chmod u+x /etc/firewall.*
+sudo bash /etc/firewall.sh
+
+# Step 11: Install Snort
+sudo apt-get install snort -y
+
+# Step 12 and 13: Download and install Snort rules
+wget "https://www.snort.org/reg-rules/snortrules-snapshot-$RULES_VERSION.tar.gz" -O ./snortrules.tar.gz
+tar zxpvf snortrules.tar.gz
+sudo mv preproc_rules /etc/snort
+sudo mv so_rules /etc/snort
+sudo cp -r rules /etc/snort
+
+# Step 14: Create rules folders for Snort
+sudo touch /etc/snort/rules/white_list.rules
+sudo touch /etc/snort/rules/black_list.rules
+sudo mkdir -p /etc/snort
+
+# Step 15: Ensure prerequisites are installed
+sudo apt-get install -y libcrypt-ssleay-perl liblwp-useragent-determined-perl
+
+# Step 16: Download and configure PulledPork
+wget "https://www.github.com/shirkdog/pulledpork/archive/refs/tags/$PULLEDPORK_VERSION.tar.gz"
+tar xzpf "$PULLEDPORK_VERSION.tar.gz"
+cd "pulledpork-$PULLEDPORK_VERSION"
+sudo chmod +x pulledpork.pl
+sudo cp pulledpork.pl /usr/local/bin
+sudo cp etc/*.conf /etc/snort
+
+# Modify pulledpork.conf
+sudo sed -i "s|^rule_url=.*|rule_url=https://www.snort.org/reg-rules/|snortrules-snapshot.tar.gz|$OINK_CODE|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^rule_path=.*|rule_path=/etc/snort/rules/snort.rules|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^out_path=.*|out_path=/etc/snort/rules/|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^local_rules=.*|local_rules=/etc/snort/rules/local.rules|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^sid_msg=.*|sid_msg=/etc/snort/sid-msg.map|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^sid_msg_version=.*|sid_msg_version=2|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^sid_changelog=.*|sid_changelog=/var/log/sid_changes.log|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^sorule_path=.*|sorule_path=/usr/local/lib/snort_dynamicrules/|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^snort_path=.*|snort_path=/usr/sbin/snort|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^config_path=.*|config_path=/etc/snort/snort.conf|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^distro=.*|distro=Ubuntu-18-4|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^block_list=.*|block_list=/etc/snort/rules/black_list.rules|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^IPRVersion=.*|IPRVersion=/etc/snort/rules/|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^Snort_control=.*|Snort_control=/usr/local/bin/snort_control|" /etc/snort/pulledpork.conf
+sudo sed -i "s|^Version=.*|Version=$PULLEDPORK_VERSION|" /etc/snort/pulledpork.conf
+
+sudo /usr/local/bin/pulledpork.pl -c /etc/snort/pulledpork.conf -l
+# or
+sudo /usr/local/bin/pulledpork.pl -k -c /etc/snort/pulledpork.conf -K /etc/snort/rules -o /etc/snort/rules
+
+# Step 17: Modify snort.conf again
+sudo sed -i '/^include \$RULE_PATH\/snort.rules$/d' /etc/snort/snort.conf
+echo 'include $RULE_PATH/snort.rules' | sudo tee -a /etc/snort/snort.conf
+
+sudo snort -T -c /etc/snort/snort.conf -i eth0
+# to test
+
+# Step 18: Add to crontab to run automatically
+(crontab -l 2>/dev/null; echo "$CRON_MINS $CRON_HOUR * * $CRON_DAY /usr/local/bin/pulledpork.pl -c /etc/snort/pulledpork.conf -l") | sudo crontab -
