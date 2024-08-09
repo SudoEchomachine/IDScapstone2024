@@ -584,7 +584,7 @@ EOL"
 
 ## Step : Pull the pork and taste
             log "Running PulledPork..."
-            sudo /usr/local/bin/pulledpork.pl -T -c /etc/snort/pulledpork.conf -l
+            sudo /usr/local/bin/pulledpork.pl -P -T -c /etc/snort/pulledpork.conf -l
             check_error "Running PulledPork"
 
             log "Modifying snort.conf..."
