@@ -40,3 +40,7 @@ Installation:
 Image files must be flashed to an SD card.
 
 I used Balena Etcher.
+
+Default login credentials
+user: shelter
+pass: truffle
