@@ -22,11 +22,36 @@ This project uses open-source software
 
 Installation:
 
-Download bash install script & NetworkConnect.sh
+Choose an option:
 
-Requires installed OS.
+        1. Bash script install. allows for full customization including OS.
+
+            Requires installed OS
+
+            Download bash install script & NetworkConnect.sh
+
+            Run install script on first boot
+
+            Run NetworkConnect.sh when accessing a new network
+
+        2. Ubuntu image self install. allows for partial customization.
+
+            Run install script on first boot
+
+            Run NetworkConnect.sh when accessing a new network
+
+            Run NewUserSetup.sh on first boot
+
+        3. Ubuntu image no install. No customization options.
+
+            Run NewUserSetup.sh on first boot
+
+            Run 'sudo apt update && sudo apt upgrade -y'
+
 
 Fill in user prompts as desired
+
+Use a hotspot on your phone for initial install and to make connecting to future networks easier via SSH
 
 IP address X.X.X.0 is reserved for Network purposes
 
@@ -38,10 +63,12 @@ Delete entry when prompted for Address range, then hit ok.
 
 Reboot when done. Screen and keyboard are only necessary for intial setup.
 
-Alert site (WIP) can be accessed at the ip address found by using command 
+Alert site (WIP) can be accessed at the first ip address found by using command 'hostname -I'
 
         
 
 Default login credentials
+
 user: shelter
+
 pass: truffle
