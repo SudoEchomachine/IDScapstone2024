@@ -25,6 +25,7 @@ Installation:
   Download one of the three options;
   
     1. Bash install script & NetworkConnect.sh
+        Requires installed OS.
     
         Source install for advanced users. For full customization including hardware.
         
@@ -35,14 +36,12 @@ Installation:
     3. Image file full
     
         Image file with completed setup. Little to no customization.
+        Run NewUserSetup.sh at first login.
         
-
 
 Image files must be flashed to an SD card.
 
 I used Balena Etcher.
-
-Run NewUserSetup.sh at first login.
 
 Default login credentials
 user: shelter
