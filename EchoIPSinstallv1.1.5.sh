@@ -214,6 +214,7 @@ create_new_user() {
         echo "Failed to create the user $NEW_USER."
         exit 1
     fi
+    cd /home/$NEW_USER
     su $NEW_USER
     read -p "Do you want to delete the default user? (y/n): " DELETE_DEFAULT
     if [[ "$DELETE_DEFAULT" =~ ^[Yy]$ ]]; then
@@ -495,8 +496,8 @@ preprocessor reputation: \\
     memcap 500, \\
     priority whitelist, \\
     nested_ip inner, \\
-    whitelist \$WHITE_LIST_PATH/whitelist.rules, \\
-    blacklist \$BLACK_LIST_PATH/blacklist.rules
+    whitelist $WHITE_LIST_PATH/whitelist.rules, \\
+    blacklist $BLACK_LIST_PATH/blacklist.rules
 EOL"
 
             log "Updating Snort rules path..."
